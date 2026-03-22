@@ -2,7 +2,7 @@
 
 一个面向本地知识库的 RAG 问答系统：把你的 Obsidian/Markdown 文档切片入库到 pgvector，基于语义检索生成有引用来源的回答。
 
-![Obsidian RAG UI](frontend/src/assets/hero.png)
+![Obsidian RAG UI](docs/images/demo.png)
 
 ## 项目说明
 
