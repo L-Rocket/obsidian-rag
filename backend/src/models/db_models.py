@@ -1,4 +1,5 @@
 import uuid
+import os
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Enum as SQLEnum, JSON
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
@@ -7,6 +8,8 @@ from pgvector.sqlalchemy import Vector
 import enum
 
 from src.services.db import Base
+
+EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "1024"))
 
 class RoleEnum(str, enum.Enum):
     user = 'user'
@@ -19,8 +22,8 @@ class Document(Base):
     filename = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     metadata_ = Column("metadata", JSONB, default=dict)
-    # Using 1536 as default dimension for text-embedding-3-small/text-embedding-ada-002
-    embedding = Column(Vector(1536))
+    # Keep this aligned with your embedding model output dimension.
+    embedding = Column(Vector(EMBEDDING_DIM))
 
 class Conversation(Base):
     __tablename__ = 'conversations'

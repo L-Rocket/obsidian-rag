@@ -12,16 +12,47 @@ def search_documents(db: Session, query: str, limit: int = 5) -> List[Dict[str, 
 
     # Perform cosine distance search (<=> operator in pgvector)
     # The lower the distance, the more similar.
-    results = db.query(Document).order_by(
-        Document.embedding.cosine_distance(query_embedding)
-    ).limit(limit).all()
+    distance = Document.embedding.cosine_distance(query_embedding).label("distance")
+    # Fetch a wider candidate set first, then keep top unique sources for diversity.
+    candidate_limit = max(limit * 8, 20)
+    results = (
+        db.query(Document, distance)
+        .order_by(distance)
+        .limit(candidate_limit)
+        .all()
+    )
 
-    return [
-        {
-            "id": str(doc.id),
-            "filename": doc.filename,
-            "content": doc.content,
-            "metadata": doc.metadata_
-        }
-        for doc in results
-    ]
+    selected: List[Dict[str, Any]] = []
+    seen_sources = set()
+    seen_filenames = set()
+
+    ranked_results = sorted(
+        results,
+        key=lambda item: (
+            float(item[1]) if item[1] is not None else 1.0,
+            0 if (item[0].metadata_ or {}).get("source_path") else 1,
+        ),
+    )
+
+    for doc, dist in ranked_results:
+        metadata = doc.metadata_ or {}
+        filename = doc.filename
+        source_key = metadata.get("source_path") or doc.filename
+        if source_key in seen_sources or filename in seen_filenames:
+            continue
+
+        seen_sources.add(source_key)
+        seen_filenames.add(filename)
+        selected.append(
+            {
+                "id": str(doc.id),
+                "filename": filename,
+                "content": doc.content,
+                "metadata": metadata,
+                "score": float(dist) if dist is not None else None,
+            }
+        )
+        if len(selected) >= limit:
+            break
+
+    return selected

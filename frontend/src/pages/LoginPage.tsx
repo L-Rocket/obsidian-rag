@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -23,9 +23,7 @@ export const LoginPage: React.FC = () => {
 
       const res = await fetch('http://localhost:8000/api/v1/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData,
       });
 
@@ -36,7 +34,7 @@ export const LoginPage: React.FC = () => {
       const data = await res.json();
       login(data.access_token);
       navigate('/');
-    } catch (err) {
+    } catch {
       setError('Invalid username or password');
     } finally {
       setLoading(false);
@@ -44,54 +42,66 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
-        <div className="flex justify-center mb-8">
-          <div className="bg-blue-600/20 p-4 rounded-full border border-blue-500/30">
-            <Lock className="w-8 h-8 text-blue-500" />
+    <div className="cg-login-page">
+      <div className="cg-login-atmo" />
+
+      <div className="cg-login-card">
+        <div className="cg-login-header">
+          <div className="cg-login-lock-wrap">
+            <Lock className="h-7 w-7" />
+          </div>
+          <div>
+            <h1>Welcome back</h1>
+            <p>Sign in to continue to your Obsidian RAG workspace.</p>
           </div>
         </div>
-        
-        <h2 className="text-2xl font-bold text-center text-white mb-8">Welcome Back</h2>
-        
-        <form onSubmit={handleLogin} className="space-y-6">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg text-sm text-center">
-              {error}
+
+        <form className="cg-login-form" onSubmit={handleLogin}>
+          <div className="cg-login-body">
+            {error && (
+              <div className="cg-login-error" role="alert">
+                {error}
+              </div>
+            )}
+
+            <div className="cg-login-field">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                autoComplete="username"
+                className="cg-login-input"
+                required
+              />
             </div>
-          )}
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-gray-700/50 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter your username"
-              required
-            />
+
+            <div className="cg-login-field">
+              <div className="cg-login-field-head">
+                <label htmlFor="password">Password</label>
+                <span>Use your local account</span>
+              </div>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                className="cg-login-input"
+                required
+              />
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-700/50 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter your password"
-              required
-            />
+
+          <div className="cg-login-footer">
+            <button type="submit" disabled={loading || !username || !password} className="cg-login-submit">
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+            <p>Authentication is required before accessing chat and settings.</p>
           </div>
-          
-          <button
-            type="submit"
-            disabled={loading || !username || !password}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
         </form>
       </div>
     </div>

@@ -5,12 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-import uuid
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from src.services.db import get_db
 from src.services.auth import get_current_user
 from src.models.db_models import Conversation, Message, RoleEnum
-from src.graph.workflow import rag_app
+from src.graph.nodes.generate import get_llm, format_context
+from src.services.vector_search import search_documents
 
 router = APIRouter()
 
@@ -18,52 +19,107 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[str] = None
     query: str
 
+def _build_history_messages(db: Session, conversation_id: str, limit: int = 12):
+    history_rows = (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    history_rows.reverse()
+
+    history_messages = []
+    for row in history_rows:
+        if row.role == RoleEnum.user:
+            history_messages.append(HumanMessage(content=row.content))
+        else:
+            history_messages.append(AIMessage(content=row.content))
+    return history_messages
+
+
 async def stream_rag_response(query: str, conversation_id: str, db: Session):
-    state = {
-        "conversation_id": conversation_id,
-        "query": query,
-        "chat_history": [],
-        "context_documents": [],
-        "generation": ""
-    }
-    
-    # Save user message to db
+    history_messages = _build_history_messages(db, conversation_id)
+
+    # Save current user message before generation.
     user_msg = Message(
         conversation_id=conversation_id,
         role=RoleEnum.user,
-        content=query
+        content=query,
     )
     db.add(user_msg)
     db.commit()
-    
-    # For a real streaming implementation, we would use an astream events approach from langgraph.
-    # Here we will simulate SSE streaming by chunking the final generation or yielding graph events.
-    # In LangGraph with Langchain, we can yield from `astream_events` or `astream`.
-    
-    # Using simple invoke for the MVP and then yielding chunks
-    result = rag_app.invoke(state)
-    
-    generation = result.get("generation", "")
-    sources = [{"filename": d["filename"], "metadata": d.get("metadata", {})} for d in result.get("context_documents", [])]
-    
-    # Save assistant message
+
+    documents = search_documents(db, query)
+    context_str = format_context(documents)
+    system_prompt = (
+        "You are a helpful assistant answering questions based on the provided Obsidian notes. "
+        "Cite concrete files from the retrieved context when relevant.\n\n"
+        f"Context:\n{context_str}"
+    )
+
+    messages = [
+        SystemMessage(content=system_prompt),
+        *history_messages,
+        HumanMessage(content=query),
+    ]
+
+    sources = [
+        {
+            "filename": d["filename"],
+            "metadata": d.get("metadata", {}),
+            "score": d.get("score"),
+        }
+        for d in documents
+    ]
+
+    # Emit metadata events first so the frontend can show progress and references.
+    yield f"event: conversation\ndata: {json.dumps({'conversation_id': conversation_id})}\n\n"
+    yield (
+        "event: trace\ndata: "
+        + json.dumps(
+            {
+                "stage": "retrieve",
+                "retrieved_count": len(documents),
+                "files": [
+                    {
+                        "filename": s["filename"],
+                        "source_path": (s.get("metadata") or {}).get("source_path"),
+                        "score": s.get("score"),
+                    }
+                    for s in sources
+                ],
+            }
+        )
+        + "\n\n"
+    )
+
+    generation_parts = []
+    llm = get_llm(db)
+    async for chunk in llm.astream(messages):
+        piece = chunk.content
+        if isinstance(piece, list):
+            piece = "".join(str(part) for part in piece)
+        piece = piece or ""
+        if not piece:
+            continue
+        generation_parts.append(piece)
+        yield f"event: message\ndata: {json.dumps({'chunk': piece})}\n\n"
+        await asyncio.sleep(0)
+
+    generation = "".join(generation_parts)
+
     asst_msg = Message(
         conversation_id=conversation_id,
         role=RoleEnum.assistant,
         content=generation,
-        sources=sources
+        sources=sources,
     )
     db.add(asst_msg)
     db.commit()
-    
-    # Simulate streaming
-    for i in range(0, len(generation), 10):
-        chunk = generation[i:i+10]
-        yield f"event: message\ndata: {json.dumps({'chunk': chunk})}\n\n"
-        await asyncio.sleep(0.01)
-        
+
     yield f"event: sources\ndata: {json.dumps(sources)}\n\n"
-    yield f"event: done\ndata: {{}}\n\n"
+    yield "event: done\ndata: {}\n\n"
 
 @router.post("/chat/stream")
 async def chat_stream(req: ChatRequest, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):

@@ -22,12 +22,22 @@ export const updateSettings = async (settings: Record<string, string>) => {
   return res.json();
 };
 
-export const triggerIngest = async () => {
+export const triggerIngest = async (directoryPath?: string) => {
+  const payload = directoryPath ? { directory_path: directoryPath } : {};
   const res = await fetchWithAuth('http://localhost:8000/api/v1/ingest', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Failed to trigger ingestion');
+  if (!res.ok) {
+    let detail = 'Failed to trigger ingestion';
+    try {
+      const body = await res.json();
+      detail = body?.detail || body?.message || detail;
+    } catch {
+      // Ignore parse errors and keep default detail.
+    }
+    throw new Error(detail);
+  }
   return res.json();
 };

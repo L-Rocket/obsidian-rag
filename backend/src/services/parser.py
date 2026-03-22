@@ -10,7 +10,10 @@ def parse_obsidian_note(filepath: str) -> Dict[str, Any]:
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    metadata = {"source": os.path.basename(filepath)}
+    metadata = {
+        "source": os.path.basename(filepath),
+        "source_path": os.path.abspath(filepath),
+    }
     
     # Simple frontmatter extraction
     frontmatter_match = re.match(r'^---\n(.*?)\n---\n(.*)', content, re.DOTALL)

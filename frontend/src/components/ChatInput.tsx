@@ -37,38 +37,31 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-6 pt-2">
-      <form 
-        onSubmit={handleSubmit} 
-        className="relative flex items-end w-full bg-[#2f2f2f] rounded-2xl border border-white/10 shadow-lg focus-within:border-white/20 focus-within:bg-[#383838] transition-colors"
-      >
+    <div className="cg-input-wrap">
+      <form onSubmit={handleSubmit} className="cg-input-form">
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder="Message Obsidian RAG..."
-          className="w-full max-h-[200px] bg-transparent text-gray-100 placeholder-gray-400 px-4 py-3.5 resize-none focus:outline-none rounded-2xl"
+          placeholder="Message Obsidian RAG"
+          className="cg-input-area"
           rows={1}
         />
-        <div className="absolute right-2 bottom-2">
+        <div className="cg-send-wrap">
           <button
             type="submit"
             disabled={disabled || !input.trim()}
-            className={`
-              p-1.5 rounded-xl transition-all duration-200 flex items-center justify-center
-              ${input.trim() && !disabled 
-                ? 'bg-white text-black hover:bg-gray-200' 
-                : 'bg-white/10 text-white/30 cursor-not-allowed'}
-            `}
+            className="cg-send-btn"
+            aria-label="Send message"
           >
-            <ArrowUp className="w-5 h-5" strokeWidth={2.5} />
+            <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
           </button>
         </div>
       </form>
-      <div className="text-center mt-2">
-        <p className="text-xs text-gray-500">RAG System based on local Obsidian Vault. AI can make mistakes.</p>
+      <div className="cg-input-hint-wrap">
+        <p className="cg-input-hint">Enter to send. Shift+Enter for a new line. AI can make mistakes.</p>
       </div>
     </div>
   );

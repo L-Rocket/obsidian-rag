@@ -10,19 +10,27 @@ def chunk_document(document: Dict[str, Any], chunk_size: int = 1000, chunk_overl
     chunks = []
     
     if len(text) <= chunk_size:
-        return [document]
+        single = dict(document)
+        single_metadata = dict(document.get("metadata", {}))
+        single_metadata["chunk_index"] = 0
+        single["metadata"] = single_metadata
+        return [single]
 
     start = 0
+    chunk_index = 0
     while start < len(text):
         end = start + chunk_size
         chunk_text = text[start:end]
+        chunk_metadata = dict(document["metadata"])
+        chunk_metadata["chunk_index"] = chunk_index
         
         chunks.append({
             "content": chunk_text,
-            "metadata": document["metadata"],
+            "metadata": chunk_metadata,
             "filename": document["filename"]
         })
         
         start += chunk_size - chunk_overlap
+        chunk_index += 1
 
     return chunks

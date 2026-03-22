@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ChatPage } from './pages/ChatPage';
 import { LoginPage } from './pages/LoginPage';
+import './chatgpt.css';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout } = useAuth();
