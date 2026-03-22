@@ -10,7 +10,7 @@ export type Message = {
 export function useChatStream() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const conversationId = null; // Statically null for now, can implement conversation selection later
 
   const sendMessage = useCallback(async (query: string) => {
     setIsLoading(true);

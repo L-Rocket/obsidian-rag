@@ -8,7 +8,7 @@ def search_documents(db: Session, query: str, limit: int = 5) -> List[Dict[str, 
     Embeds the query and performs a vector similarity search in the database.
     """
     # Embed the query
-    query_embedding = get_embeddings([query])[0]
+    query_embedding = get_embeddings([query], db)[0]
 
     # Perform cosine distance search (<=> operator in pgvector)
     # The lower the distance, the more similar.

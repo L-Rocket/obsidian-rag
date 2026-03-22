@@ -31,6 +31,13 @@ class Conversation(Base):
 
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
+class Setting(Base):
+    __tablename__ = 'settings'
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
 class Message(Base):
     __tablename__ = 'messages'
 
