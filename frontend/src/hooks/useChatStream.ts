@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { fetchWithAuth } from '../api/interceptor';
 
 export type Message = {
   id: string;
@@ -24,7 +25,7 @@ export function useChatStream() {
     setMessages(prev => [...prev, { id: assistantMsgId, role: 'assistant', content: '' }]);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/chat/stream', {
+      const response = await fetchWithAuth('http://localhost:8000/api/v1/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

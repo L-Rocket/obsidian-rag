@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchSettings, updateSettings, triggerIngest } from '../api/client';
+import { X } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -64,114 +65,123 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
-        <h2 className="text-2xl font-bold mb-4 text-white">System Settings</h2>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm p-4">
+      <div className="bg-[#2f2f2f] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl border border-white/10">
         
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-gray-300">General</h3>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Obsidian Vault Absolute Path</label>
-            <input
-              type="text"
-              value={settings.OBSIDIAN_VAULT_PATH || ''}
-              onChange={(e) => handleChange('OBSIDIAN_VAULT_PATH', e.target.value)}
-              className="w-full bg-gray-700 text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500"
-              placeholder="/Users/name/Documents/Vault"
-            />
-            <button
-              onClick={handleIngest}
-              className="mt-2 text-sm bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
-            >
-              Trigger Ingestion
-            </button>
-            {ingestStatus && <span className="ml-3 text-sm text-green-400">{ingestStatus}</span>}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 mt-6 text-gray-300">Chat Model (Generation)</h3>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <h2 className="text-xl font-semibold text-gray-100">Settings</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="p-6 overflow-y-auto space-y-8 flex-1 custom-scrollbar">
+          {/* General */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">General</h3>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">API Base URL</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">Obsidian Vault Absolute Path</label>
+                <input
+                  type="text"
+                  value={settings.OBSIDIAN_VAULT_PATH || ''}
+                  onChange={(e) => handleChange('OBSIDIAN_VAULT_PATH', e.target.value)}
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                  placeholder="/Users/name/Documents/Vault"
+                />
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    onClick={handleIngest}
+                    className="text-sm bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 px-4 py-2 rounded-lg transition-colors font-medium"
+                  >
+                    Trigger Ingestion
+                  </button>
+                  {ingestStatus && <span className="text-sm text-green-400 font-medium">{ingestStatus}</span>}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Chat Model */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Chat Model (Generation)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">API Base URL</label>
                 <input
                   type="text"
                   value={settings.CHAT_API_BASE || ''}
                   onChange={(e) => handleChange('CHAT_API_BASE', e.target.value)}
-                  className="w-full bg-gray-700 text-white p-2 rounded-md"
-                  placeholder="https://api.openai.com/v1"
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Model Name</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">Model Name</label>
                 <input
                   type="text"
                   value={settings.CHAT_MODEL || ''}
                   onChange={(e) => handleChange('CHAT_MODEL', e.target.value)}
-                  className="w-full bg-gray-700 text-white p-2 rounded-md"
-                  placeholder="gpt-4o-mini"
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 transition-all"
                 />
               </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-400 mb-1">API Key</label>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">API Key</label>
                 <input
                   type="password"
                   value={settings.CHAT_API_KEY || ''}
                   onChange={(e) => handleChange('CHAT_API_KEY', e.target.value)}
-                  className="w-full bg-gray-700 text-white p-2 rounded-md"
-                  placeholder="sk-..."
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 transition-all"
                 />
               </div>
             </div>
-          </div>
+          </section>
 
-          <div>
-            <h3 className="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 mt-6 text-gray-300">Embedding Model (Vector Search)</h3>
-            <div className="grid grid-cols-2 gap-4">
+          {/* Embedding Model */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Embedding Model (Vector Search)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">API Base URL</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">API Base URL</label>
                 <input
                   type="text"
                   value={settings.EMBEDDING_API_BASE || ''}
                   onChange={(e) => handleChange('EMBEDDING_API_BASE', e.target.value)}
-                  className="w-full bg-gray-700 text-white p-2 rounded-md"
-                  placeholder="http://localhost:11434/v1"
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Model Name</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">Model Name</label>
                 <input
                   type="text"
                   value={settings.EMBEDDING_MODEL || ''}
                   onChange={(e) => handleChange('EMBEDDING_MODEL', e.target.value)}
-                  className="w-full bg-gray-700 text-white p-2 rounded-md"
-                  placeholder="text-embedding-3-small"
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 transition-all"
                 />
               </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-400 mb-1">API Key</label>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">API Key</label>
                 <input
                   type="password"
                   value={settings.EMBEDDING_API_KEY || ''}
                   onChange={(e) => handleChange('EMBEDDING_API_KEY', e.target.value)}
-                  className="w-full bg-gray-700 text-white p-2 rounded-md"
-                  placeholder="sk-..."
+                  className="w-full bg-[#1e1e1e] border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 transition-all"
                 />
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
-        <div className="mt-8 flex justify-end gap-3">
+        <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-[#2a2a2a] rounded-b-2xl">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+            className="px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-6 py-2.5 text-sm font-medium bg-white text-black rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
             {loading ? 'Saving...' : 'Save Settings'}
           </button>

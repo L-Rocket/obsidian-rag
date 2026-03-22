@@ -10,6 +10,7 @@ from src.services.chunker import chunk_document
 from src.services.embedder import get_embeddings
 from src.services.db_storage import save_documents
 from src.services.config import get_setting
+from src.services.auth import get_current_user
 
 router = APIRouter()
 
@@ -17,7 +18,7 @@ class IngestRequest(BaseModel):
     directory_path: Optional[str] = None
 
 @router.post("/ingest")
-def ingest_directory(req: IngestRequest, db: Session = Depends(get_db)):
+def ingest_directory(req: IngestRequest, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     directory_path = req.directory_path or get_setting(db, "OBSIDIAN_VAULT_PATH")
     
     if not directory_path or not os.path.isdir(directory_path):

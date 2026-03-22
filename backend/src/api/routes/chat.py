@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import uuid
 
 from src.services.db import get_db
+from src.services.auth import get_current_user
 from src.models.db_models import Conversation, Message, RoleEnum
 from src.graph.workflow import rag_app
 
@@ -65,7 +66,7 @@ async def stream_rag_response(query: str, conversation_id: str, db: Session):
     yield f"event: done\ndata: {{}}\n\n"
 
 @router.post("/chat/stream")
-async def chat_stream(req: ChatRequest, db: Session = Depends(get_db)):
+async def chat_stream(req: ChatRequest, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     # Create conversation if not exists
     if not req.conversation_id:
         conv = Conversation(title=req.query[:50])

@@ -5,8 +5,13 @@ from fastapi.testclient import TestClient
 
 from src.api.main import app
 from src.api.routes.ingest import router as ingest_router
+from src.services.auth import get_current_user
 
 app.include_router(ingest_router)
+
+# Override auth dependency for tests
+app.dependency_overrides[get_current_user] = lambda: "admin"
+
 client = TestClient(app)
 
 @patch("src.api.routes.ingest.get_embeddings")
